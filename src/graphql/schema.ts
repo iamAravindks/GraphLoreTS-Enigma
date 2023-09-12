@@ -2,12 +2,15 @@ import { buildSchema } from "graphql";
 
 export default buildSchema(`
   type Address {
+    _id:ID
     addressLine1: String
     addressLine2: String
     city: String
     state: String
     country: String
     zip: String
+    createdAt: String
+    updatedAt: String
   }
 
   
@@ -49,6 +52,8 @@ export default buildSchema(`
     address: [AddressInput!]
   }
 
+  
+
   type AuthData{
     token:String!
     userId:String!
@@ -57,11 +62,13 @@ export default buildSchema(`
   type RootQuery {
     login(email:String!,password:String!) : AuthData!
     user:User!
+    getAddressWithID(addressId:String) :Address!
   }
 
   type RootMutation {
     createUser(userInput: UserInput): User!
     updateUserProfile(userProfileInput:ProfileUserInput) :User!
+    updateUserAddressWithId(addressId:String,addressInput:AddressInput) : User!
   }
 
 

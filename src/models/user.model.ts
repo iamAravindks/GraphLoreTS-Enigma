@@ -5,11 +5,17 @@ import isEmail from "validator/lib/isEmail";
 export interface Address
 {
     addressLine1: string;
-    addressLine2: string;
+    addressLine2?: string;
     city: string;
     state: string;
     country: string;
     zip: string;
+}
+
+export interface IAddressDocument extends Address, Document
+{
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export interface IUser
@@ -28,7 +34,7 @@ export interface IUser
 
 export interface IUserDocument extends IUser, Document
 {
-    address: Types.Array<Address>;
+    address: Types.Array<IAddressDocument>;
     createdAt: Date;
     updatedAt: Date;
     comparePassword(enteredPassword: string): Promise<boolean>;
@@ -37,6 +43,33 @@ export interface IUserDocument extends IUser, Document
 }
 
 export interface IUserModel extends Model<IUserDocument> { }
+
+interface IAddressModel extends Model<IAddressDocument> { }
+
+
+const userAddressSchema = new mongoose.Schema<IAddressDocument, IAddressModel>({
+    addressLine1: {
+        type: String,
+        required: true
+    },
+    addressLine2: String,
+    city: {
+        type: String,
+        required: true
+    },
+    state: {
+        type: String,
+        required: true
+    },
+    country: {
+        type: String,
+        required: true
+    },
+    zip: {
+        type: String,
+        required: true
+    },
+}, { timestamps: true })
 
 const userSchema = new mongoose.Schema<IUserDocument, IUserModel>({
     email: {
@@ -61,15 +94,7 @@ const userSchema = new mongoose.Schema<IUserDocument, IUserModel>({
         type: String,
         required: true,
     },
-    address: [{
-        addressLine1: String,
-        addressLine2: String,
-        city: String,
-        state: String,
-        country: String,
-        zip: String,
-
-    }],
+    address: [userAddressSchema],
     resetPasswordToken: String, resetPasswordExpire: String,
 }, {
     timestamps: true
@@ -124,7 +149,22 @@ userSchema.methods.toJSON = async function (
         ...this._doc,
         _id: this._id.toString(),
         createdAt: this.createdAt.toISOString(),
-        updatedAt: this.updatedAt.toISOString()
+        updatedAt: this.updatedAt.toISOString(),
+        address: this.address.map(add =>
+        {
+
+            return {
+                addressLine1: add.addressLine1,
+                addressLine2: add.addressLine2,
+                city: add.city,
+                state: add.city,
+                country: add.country,
+                zip: add.zip,
+                _id: add._id.toString(),
+                createdAt: add.createdAt.toISOString(),
+                updatedAt: add.updatedAt.toISOString(),
+            }
+        })
     }
 }
 export default mongoose.model<IUserDocument, IUserModel>("User", userSchema);

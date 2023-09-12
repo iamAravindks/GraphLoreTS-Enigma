@@ -2,13 +2,14 @@ import { Request } from "express"
 import jwt from 'jsonwebtoken'
 
 
-import { IProfileUserInput, IUserInput } from "../interfaces/user.interface"
+
+import { IAddressInput, IProfileUserInput, IUserInput } from "../interfaces/user.interface"
 import { validatorSignUp } from "../validators/user.validator"
 import { ErrorObject } from "../validators/ErrorObject"
 
-import User, { Address, IUserDocument } from '../models/user.model'
+import User, { Address, IAddressDocument, IUserDocument } from '../models/user.model'
 import config from "../config"
-import { Types } from "mongoose"
+import mongoose, { Types } from "mongoose"
 
 export default {
     createUser: async (args: { userInput: IUserInput }, req: Request) =>
@@ -125,7 +126,6 @@ export default {
             }
 
             const { userProfileInput } = args
-            console.log(userProfileInput)
             const { address, email, firstName, lastName, password } = userProfileInput
 
             const user = await User.findById(req.userId) as IUserDocument;
@@ -136,7 +136,7 @@ export default {
             if (password) user.password = password;
 
             if (address && address.length > 0) {
-                user.address = address as Types.Array<Address>
+                user.address = address as Types.Array<IAddressDocument>
             }
 
             const storedUser = await user.save();
@@ -149,6 +149,95 @@ export default {
 
         } catch (error) {
             if (error instanceof ErrorObject || error instanceof Error) {
+                throw error;
+            }
+        }
+    },
+    getAddressWithID: async function (args: { addressId: string }, req: Request)
+    {
+        try {
+            if (!req.isAuth) {
+                throw new ErrorObject("Unauthorized", 401)
+            }
+
+            const { addressId } = args
+            console.log(addressId)
+
+            const user = await User.findOne(
+                {
+                    _id: req.userId,
+                    "address._id": new mongoose.Types.ObjectId(addressId)
+                },
+                {
+                    "address.$": 1,
+                    "_id": 0
+                }
+            ) as IUserDocument
+
+            console.log(user)
+            if (!user) {
+                throw new ErrorObject("No address found", 404)
+            }
+            const matchedAddress = user.address[0]
+
+            return matchedAddress
+
+        } catch (error) {
+            if (error instanceof ErrorObject || error instanceof Error) {
+                throw error;
+            }
+        }
+    },
+    updateUserAddressWithId: async function (args: { addressId: string, addressInput: IAddressInput }, req: Request)
+    {
+        try {
+            if (!req.isAuth) {
+                throw new ErrorObject("Unauthorized", 401)
+            }
+
+            const { addressId, addressInput } = args
+            // console.log(addressId)
+
+            const filter = {
+                _id: req.userId,
+                "address._id": new mongoose.Types.ObjectId(addressId)
+            }
+
+            const user = await User.findOne(
+                filter,
+                {
+                    "address.$": 1,
+                    "_id": 0
+                }
+            ) as IUserDocument
+
+            console.log(user)
+            if (!user) {
+                throw new ErrorObject("No address found", 404)
+            }
+
+            const { addressLine1, addressLine2, city, country, state, zip } = addressInput
+
+            const matchedAddress = user.address[0]
+
+            await User.updateOne(filter, {
+                $set: {
+                    "address.$.addressLine1": addressLine1 || matchedAddress.addressLine1,
+                    "address.$.addressLine2": addressLine2 || matchedAddress.addressLine2,
+                    "address.$.city": city || matchedAddress.city,
+                    "address.$.state": state || matchedAddress.state,
+                    "address.$.country": country || matchedAddress.country,
+                    "address.$.zip": zip || matchedAddress.zip,
+                },
+
+            })
+            const updatedUser = await User.findById(req.userId) as IUserDocument;
+            console.log(updatedUser)
+            return updatedUser.toJSON()
+
+        } catch (error) {
+            if (error instanceof ErrorObject || error instanceof Error) {
+                console.log(error)
                 throw error;
             }
         }

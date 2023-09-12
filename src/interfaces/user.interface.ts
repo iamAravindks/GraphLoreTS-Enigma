@@ -29,3 +29,13 @@ export interface IProfileUserInput
     password?: string
     address?: Array<Address>
 }
+
+export interface IAddressInput
+{
+    addressLine1?: string
+    addressLine2?: string
+    city?: string
+    state?: string
+    country?: string
+    zip?: string
+}
