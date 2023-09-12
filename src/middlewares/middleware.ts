@@ -62,12 +62,12 @@ export function notFound(req: Request, res: Response, next: NextFunction)
 }
 
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const errorHandler = (error: IErrorObject, req: Request, res: Response, next: NextFunction) =>
 {
 
     const status = error.code || 500;
     const message = error.message;
     const data = error.data;
-    console.log(`${message}`.red)
     res.status(status).json({ message: message, data: data, stack: error.stack });
 }

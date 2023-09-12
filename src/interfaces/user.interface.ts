@@ -1,5 +1,3 @@
-import { Request } from 'express'
-import { Types } from "mongoose";
 import { Address } from "../models/user.model";
 export interface IUserInput
 {

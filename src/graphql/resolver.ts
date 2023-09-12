@@ -7,21 +7,21 @@ import { IAddressInput, IProfileUserInput, IUserInput } from "../interfaces/user
 import { validatorSignUp } from "../validators/user.validator"
 import { ErrorObject } from "../validators/ErrorObject"
 
-import User, { Address, IAddressDocument, IUserDocument } from '../models/user.model'
+import User, { IAddressDocument, IUserDocument } from '../models/user.model'
 import config from "../config"
 import mongoose, { Types } from "mongoose"
 
 export default {
-    createUser: async (args: { userInput: IUserInput }, req: Request) =>
+    createUser: async (args: { userInput: IUserInput }) =>
     {
         const { userInput } = args
         const errors = validatorSignUp(userInput)
 
         if (errors.length > 0) {
-            console.log(errors)
             throw new ErrorObject("Invalid inputs", 422, errors)
         }
 
+        // eslint-disable-next-line prefer-const
         let { email, firstName, password, lastName } = userInput
         email = email.trim().toLowerCase();
         firstName = firstName.trim().toLowerCase();
@@ -46,7 +46,6 @@ export default {
 
             await newUser.save()
 
-            console.log(newUser)
 
             return { ...newUser._doc, _id: newUser._id.toString(), createdAt: newUser.createdAt.toISOString(), updatedAt: newUser.updatedAt.toISOString() }
 
@@ -60,7 +59,7 @@ export default {
 
     },
 
-    login: async function (args: { email: string; password: string }, req: Request)
+    login: async function (args: { email: string; password: string })
     {
         try {
             const { email, password } = args;
@@ -71,7 +70,6 @@ export default {
             }
 
             const isPasswordMatching = await user.comparePassword(password);
-            console.log(isPasswordMatching)
             if (!isPasswordMatching) {
                 throw new ErrorObject("Invalid credentials", 409);
             }
@@ -89,7 +87,7 @@ export default {
             }
         }
     },
-    user: async function (arg: any, req: Request)
+    user: async function (arg: unknown, req: Request)
     {
 
         try {
@@ -161,7 +159,6 @@ export default {
             }
 
             const { addressId } = args
-            console.log(addressId)
 
             const user = await User.findOne(
                 {
@@ -174,7 +171,6 @@ export default {
                 }
             ) as IUserDocument
 
-            console.log(user)
             if (!user) {
                 throw new ErrorObject("No address found", 404)
             }
@@ -196,7 +192,6 @@ export default {
             }
 
             const { addressId, addressInput } = args
-            // console.log(addressId)
 
             const filter = {
                 _id: req.userId,
@@ -211,7 +206,6 @@ export default {
                 }
             ) as IUserDocument
 
-            console.log(user)
             if (!user) {
                 throw new ErrorObject("No address found", 404)
             }
@@ -232,12 +226,10 @@ export default {
 
             })
             const updatedUser = await User.findById(req.userId) as IUserDocument;
-            console.log(updatedUser)
             return updatedUser.toJSON()
 
         } catch (error) {
             if (error instanceof ErrorObject || error instanceof Error) {
-                console.log(error)
                 throw error;
             }
         }

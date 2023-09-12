@@ -23,7 +23,7 @@ connectDB()
 
 app.use(morgan("dev"))
 app.use(helmet())
-// app.use(cors())
+app.use(cors())
 app.use(express.json())
 
 app.use(auth)
@@ -47,8 +47,4 @@ app.use(errorHandler)
 
 
 
-app.listen(PORT, () =>
-{
-    console.log(`server listens at http://localhost:${PORT}`.blue)
-    console.log(`graphiql runs on http://localhost:${PORT}/graphql`.magenta)
-})
+app.listen(PORT)

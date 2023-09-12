@@ -21,7 +21,7 @@ export interface IAddressDocument extends Address, Document
 export interface IUser
 {
     firstName: string;
-    lastName?: String;
+    lastName?: string;
     password: string;
     email: string;
     isAdmin: boolean;
@@ -38,6 +38,7 @@ export interface IUserDocument extends IUser, Document
     createdAt: Date;
     updatedAt: Date;
     comparePassword(enteredPassword: string): Promise<boolean>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _doc?: any
     toJSON(): IUser;
 }
@@ -135,7 +136,6 @@ userSchema.methods.comparePassword = async function (
 ): Promise<boolean>
 {
     // So we don't have to pass this into the interface method
-    console.log(this)
 
     return await bcrypt.compare(enteredPassword, this.password)
 };
